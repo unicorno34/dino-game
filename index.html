@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dino Game Custom</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      overflow: hidden;
+    }
+    #game {
+      position: relative;
+      width: 100vw;
+      height: 300px;
+      background: #fff;
+      border-bottom: 2px solid #555;
+      overflow: hidden;
+    }
+    #dino {
+      position: absolute;
+      bottom: 20px;
+      left: 50px;
+      width: 40px;
+      height: 40px;
+      background: #333;
+      border-radius: 5px;
+    }
+    .obstacle {
+      position: absolute;
+      bottom: 20px;
+      width: 20px;
+      height: 40px;
+      background: #666;
+    }
+    .cloud {
+      position: absolute;
+      top: 20px;
+      width: 100px;
+      height: 30px;
+      background: #ccc;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 30px;
+      font-size: 14px;
+      color: #333;
+      font-weight: bold;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 20px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="dino"></div>
+    <div id="score">0</div>
+  </div>
+
+  <!-- Audio -->
+  <audio id="jumpSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+  <audio id="gameOverSound" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
+
+  <script>
+    const dino = document.getElementById("dino");
+    const game = document.getElementById("game");
+    const scoreDisplay = document.getElementById("score");
+    const cloudTexts = ["TREFIN", "AEROSOFT", "NAUTICAD", "3F"];
+
+    const jumpSound = document.getElementById("jumpSound");
+    const gameOverSound = document.getElementById("gameOverSound");
+
+    let isJumping = false;
+    let gravity = 0.9;
+    let position = 0;
+    let score = 0;
+
+    function jump() {
+      if (isJumping) return;
+      isJumping = true;
+      jumpSound.play();
+
+      let count = 0;
+      let upTimer = setInterval(() => {
+        if (count >= 15) {
+          clearInterval(upTimer);
+          let downTimer = setInterval(() => {
+            if (count <= 0) {
+              clearInterval(downTimer);
+              isJumping = false;
+            }
+            position -= 5;
+            count--;
+            position *= gravity;
+            dino.style.bottom = 20 + position + "px";
+          }, 20);
+        }
+        position += 5;
+        count++;
+        position *= gravity;
+        dino.style.bottom = 20 + position + "px";
+      }, 20);
+    }
+
+    function createObstacle() {
+      const obstacle = document.createElement("div");
+      obstacle.classList.add("obstacle");
+      let obstaclePosition = window.innerWidth;
+      obstacle.style.left = obstaclePosition + "px";
+      game.appendChild(obstacle);
+
+      let timer = setInterval(() => {
+        if (obstaclePosition < -20) {
+          clearInterval(timer);
+          game.removeChild(obstacle);
+          score++;
+          scoreDisplay.textContent = score;
+        } else if (obstaclePosition > 50 && obstaclePosition < 90 && position < 40) {
+          clearInterval(timer);
+          gameOverSound.play();
+          alert("Game Over! Punteggio: " + score);
+          location.reload();
+        }
+        obstaclePosition -= 5;
+        obstacle.style.left = obstaclePosition + "px";
+      }, 20);
+
+      setTimeout(createObstacle, Math.random() * 3000 + 1000);
+    }
+
+    function createCloud() {
+      const cloud = document.createElement("div");
+      cloud.classList.add("cloud");
+      cloud.textContent = cloudTexts[Math.floor(Math.random() * cloudTexts.length)];
+      let cloudPosition = window.innerWidth;
+      cloud.style.left = cloudPosition + "px";
+      game.appendChild(cloud);
+
+      let cloudTimer = setInterval(() => {
+        if (cloudPosition < -100) {
+          clearInterval(cloudTimer);
+          game.removeChild(cloud);
+        }
+        cloudPosition -= 2;
+        cloud.style.left = cloudPosition + "px";
+      }, 40);
+
+      setTimeout(createCloud, Math.random() * 5000 + 2000);
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        jump();
+      }
+    });
+
+    createObstacle();
+    createCloud();
+  </script>
+</body>
+</html>
